@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Add To Cart</title>
+		<link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="../vendor/fontawesome-free-6.0.0-web/css/all.min.css">
+        <style>
+            .product img{
+                width: 150px;
+                height: auto;
+                margin-bottom: -50px;
+                margin-left: 1rem;
+                z-index: 1;
+                transition: 0.5s;
+            }
+            .product:hover img{
+                transform: scale(1.02) rotate(-15deg);
+            }
+			.cart-img{
+				height: 50px;
+			}
+			.quantity-plus,.quantity-minus{
+				width: 12%;
+			}
+			/* Hide scrollbar for Chrome, Safari and Opera */
+			.hidebar::-webkit-scrollbar {
+				display: none;
+			}
+
+			/* Hide scrollbar for IE, Edge and Firefox */
+			.hidebar {
+				-ms-overflow-style: none;  /* IE and Edge */
+				scrollbar-width: none;  /* Firefox */
+			}
+			.zindex{
+				z-index: 10;
+			}
+			
+        </style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row justify-content-center">
+				<div class="col-10">
+					<div>
+						<div class="row">
+							<div class="col-8 border-end min-vh-100">
+								<div class="vh-100 hidebar overflow-scroll pe-2">
+									<div class="d-flex justify-content-between align-items-end position-sticky top-0 zindex bg-white p-3">
+										<div>
+											<h4 class="text-primary mb-0">My Shop</h4>
+											<small class="text-black-50">BootStrap 5 & jQuery</small>
+										</div>
+										<div>
+											<form class="row g-3">
+												<div class="col-auto">
+													<input class="form-control text-capitalize" id="search" placeholder="search item" />
+												</div>
+												<div class="col-auto">
+													<select class="form-select" id="category">
+														<option selected value="0">All Category</option>
+													</select>
+												</div>
+											</form>
+										</div>
+									</div>
+									<div class="row row-cols-1 row-cols-md-3 g-4 " id="products">
+										
+									</div>
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="vh-100 hidebar overflow-scroll">
+									<div class="d-flex justify-content-between my-3 align-items-end">
+										<div>
+											<h4 class="text-primary mb-0">My Cart</h4>
+											<small class="text-black-50">Checkout</small>
+										</div>
+										<div>
+											<h4 class=" me-2">
+												<span class="cart-item-quantity">0</span>
+												<i class="fa-solid fa-cart-shopping text-primary"></i>
+											</h4>
+										</div>
+									</div>
+									<div class="" id="cart">
+										
+									</div>
+									<div class="total position-sticky bottom-0 py-3 bg-white">
+										
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<script src="../node_modules/jquery/dist/jquery.min.js"></script>
+
+		<script>
+
+			let products = [];
+
+            //limit description word
+            function shorten(str, max=100){
+                if(str.length > max){
+                   return str.substring(0, max)+'....'
+                }
+
+                return str;
+            }
+
+			function showUi(x){
+				//empty first
+				$('#products').empty();
+
+				x.map(el => {
+                    //add cards
+			        $('#products').append(`
+						<div class="col">
+							<div class="card product border-0 pt-3">
+								<img src="${el.image}" class="card-img-top" alt="..." />
+								<div class="card-body border rounded">
+									<h5 class="card-title mt-5 fw-bolder text-nowrap overflow-hidden text-primary">${el.title}</h5>
+									<p class="card-text text-black-50">
+									${shorten(el.description)}
+									</p>
+									<div class=' d-flex justify-content-between mt-3 align-items-end'>
+										<span class=' fw-bold'>${el.price}</span>
+										<button class="btn btn-outline-primary btn-sm add-to-cart" data-id='${el.id}'>
+										Add <i class="fas fa-cart-plus"></i> 
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+			        `)
+			    })
+			}
+
+            //get data from api
+			$.get('https://fakestoreapi.com/products', function(data){
+			    products = data;
+				console.log('done fetching products');
+				//ui mr loop pat pyi pya
+			    showUi(products);
+			})
+
+
+            //search
+            $('#search').on('keyup', function(){
+                let keyword = $(this).val().toLowerCase();
+                // $('.product').filter(function(){
+                //     $(this).toggle($(this).text().toLowerCase().indexOf(keyword) > -1)
+
+                // });
+
+				console.log(keyword);
+
+				if(keyword.trim().length > 1){
+					let filterProducts = products.filter(el => {
+						if(el.title.toLowerCase().indexOf(keyword) > -1 || el.description.toLowerCase().indexOf(keyword) > -1 || el.price == keyword){
+							return el;
+						}
+					})
+
+					showUi(filterProducts);
+				}
+            })
+
+			//fetch category
+			$.get('https://fakestoreapi.com/products/categories', function(data){
+				data.map(el => {
+					$('#category').append(`<option value="${el}">${el}</option>`);
+				})
+				console.log('done fetching category');
+			})
+
+			//category
+			$('#category').on('change', function(){
+				let selectedCat = $(this).val();
+				console.log(selectedCat);
+
+				if(selectedCat != 0){
+					let filterProducts = products.filter(el => {
+						if(el.category === selectedCat){
+							return el;
+						}
+					})
+					showUi(filterProducts);
+				} else{
+					showUi(products);
+				}
+			})
+
+			//add-to-cart
+			function cartTotal(){
+
+				let itemCount = $('.cart-item-cost').length;
+
+				$('.cart-item-quantity').html(itemCount);
+
+				if(itemCount>0){
+					let totalCost = $('.cart-item-cost').toArray().map(el=>el.innerHTML).reduce((x,y)=> Number(x)+Number(y));
+					$('.total').html(`
+
+						<div class=" d-flex justify-content-between fw-bold px-2 mt-2">
+							<h4>Total</h4>
+							<h4 class="cart-total-cost">$ ${Number(totalCost).toFixed(2)}</h4>
+						</div>
+
+					`)
+				} else{
+					$('.total').html('Empty Cart!Shop Now!')
+				}	
+			}
+
+			$('#products').delegate('.add-to-cart','click', function(){
+				//bl product co click ll shar tr
+				let currentItemId = $(this).attr('data-id');
+				let productInfo = products.filter(el=>el.id == currentItemId)[0];
+				
+				//UI mr ma pya khin cart hte mr shi pyi ther lr a yin sit pr tl
+				if($('.cart-item').toArray().map(el => el.getAttribute('data-id')).includes(currentItemId)){
+
+					alert('Already in cart');
+
+				} else {
+					//UI mhr pya
+					$('#cart').append(`
+						<div class="card border-bottom border-0 cart-item" data-id="${productInfo.id}">
+							<div class="card-body">
+								<div class=" d-flex justify-content-between align-items-end">
+									<img src="${productInfo.image}" class="cart-img">
+									<button class=" btn btn-outline-danger btn-sm remove-from-cart">
+										<i class="fa-solid fa-trash-can"></i>
+									</button>
+								</div>
+								<p class=" mt-2">${productInfo.title}</p>
+								<div class="d-flex justify-content-between align-items-center">
+									<form class=" row g-2 d-flex align-items-center">
+										<button class=" btn btn-outline-primary btn-sm me-1 quantity-minus">
+											<i class="fa-solid fa-minus"></i>
+										</button>
+										
+										<input type="number" class=" form-control w-25 quantity" unitPrice="${productInfo.price}" value="1" min="1">
+										
+										<button class=" btn btn-outline-primary btn-sm ms-1 quantity-plus">
+											<i class="fa-solid fa-plus"></i>
+										</button>
+									</form>
+									<p class=" mb-0">$ <span class="cart-item-cost">${productInfo.price}</span></p>
+								</div>
+							</div>
+						</div>
+					`)
+				};
+
+				cartTotal();
+
+			})
+
+			//delete btn
+			$('#cart').delegate('.remove-from-cart','click', function(){
+
+				$(this).parentsUntil('#cart').remove();
+				cartTotal();
+
+			});
+
+			//plus icon
+			$('#cart').delegate('.quantity-plus', 'click', function(event){
+
+				event.preventDefault();
+				
+				let currentQuentity = $(this).siblings('.quantity').val();
+				let currentPrice = $(this).siblings('.quantity').attr('unitPrice');
+
+				let newQuentity = Number(currentQuentity)+1;
+				let newPrice = newQuentity*currentPrice;
+
+				
+				$(this).siblings('.quantity').val(newQuentity);
+				$(this).parent().siblings('p').find('.cart-item-cost').html(newPrice.toFixed(2));
+
+				cartTotal();
+			})
+
+			//minus icon
+			$('#cart').delegate('.quantity-minus', 'click', function(event){
+
+				event.preventDefault();
+
+				let currentQuentity = $(this).siblings('.quantity').val();
+				let currentPrice = $(this).siblings('.quantity').attr('unitPrice');
+
+				if(currentQuentity>1){
+					let newQuentity = Number(currentQuentity)-1;
+					let newPrice = newQuentity*currentPrice;
+
+
+					$(this).siblings('.quantity').val(newQuentity);
+					$(this).parent().siblings('p').find('.cart-item-cost').html(newPrice.toFixed(2));
+
+					cartTotal();
+				}
+			})
+
+			//fro typing in quantity
+			$('#cart').delegate('.quantity', 'keyup change', function(event){
+				event.preventDefault();
+
+				let currentQuentity = $(this).val();
+				let currentPrice = $(this).attr('unitPrice');
+
+				if(currentQuentity>1){
+					let newQuentity = Number(currentQuentity);
+					let newPrice = newQuentity*currentPrice;
+
+
+					$(this).val(newQuentity);
+					$(this).parent().siblings('p').find('.cart-item-cost').html(newPrice.toFixed(2));
+
+					cartTotal();
+				} else {
+					alert('Item cant be empty!')
+				}
+			})
+
+		</script>
+	</body>
+</html>

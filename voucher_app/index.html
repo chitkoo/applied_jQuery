@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Voucher App</title>
+		<link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="../vendor/fontawesome-free-6.0.0-web/css/all.min.css">
+	</head>
+	<style>
+		.width-50 {
+			width: 50px;
+		}
+
+		.width-300 {
+			width: 300px;
+		}
+
+		.width-150 {
+			width: 150px;
+		}
+
+		td {
+			vertical-align: middle !important;
+		}
+	</style>
+	<body>
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-12 col-lg-10">
+					<div class="my-5">
+						<h3 class="text-primary">Voucher App ( Apply jQuery )</h3>
+						<p class="text-black-50 mb-5">Bootstrap & jQuery</p>
+					</div>
+					<div class="d-flex justify-content-between mb-3">
+						<h4 class="mb-0">Product List</h4>
+						<button class="btn btn-primary add-row-btn">
+							<i class="fa-solid fa-plus"></i>
+						</button>
+					</div>
+					<table class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<th class="text-center">#</th>
+								<th>Product Name</th>
+								<th class="text-end">Cost</th>
+								<th class="text-end">Quantity</th>
+								<th class="text-end">Price</th>
+							</tr>
+						</thead>
+						<tbody>
+
+
+                        </tbody>
+						<tfoot>
+							<tr>
+								<td colspan="4" class="text-center">Total</td>
+								<td class="text-end">
+									<h4 class="font-weight-bold mb-0" id="total">0</h4>
+								</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<script src="../node_modules/jquery/dist/jquery.min.js"></script>
+
+        <script>
+
+            function addRow(){
+                $('tbody').append(`
+                <tr>
+                    <td class="width-50">
+                        <button class="btn btn-outline-primary del-btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                    <td class="width-300">
+                        <input type="text" class="form-control text-capitalize product-name">
+                    </td>
+                    <td class="width-150">
+                        <input type="number" class="form-control text-end cost" value="0" min="0">
+                    </td>
+                    <td class="width-150">
+                        <input type="number" class="form-control text-end quantity"  value="0" min=0">
+                    </td>
+                    <td class="text-end">
+                        <h4 class="mb-0 price">0</h4>
+                    </td>
+                </tr>
+                `)
+            }
+
+			//total shar 
+			function total(){
+				$('#total').html($('.price').toArray().map(el=>el.innerHTML).reduce((x,y)=> Number(x)+Number(y)));
+			}
+
+            //loading pyi tr nk row 1 khu paw
+            addRow();
+
+			//add btn
+            $('.add-row-btn').on('click', function(){
+                addRow();
+            })
+
+			//delete btn (ma shi tay tae hr twey a twet moh lo *delegate* tone)
+            $('tbody').delegate('.del-btn','click', function(){
+
+				//row twy delete lite yin naut sone mr 1 row pyn htae pay tr
+				if($('tbody tr').toArray().length === 1){
+					addRow();
+				}
+
+				$(this).parentsUntil('tbody').remove();
+				total();
+			})
+
+			$('tbody').delegate('input', 'keyup change', function(){
+				//current yite nay tae row yk input ka value only
+				let cost = $(this).parentsUntil('tbody').find('.cost').val();
+
+				let quantity = $(this).parentsUntil('tbody').find('.quantity').val();
+
+				//current row yk price hte pyn htae pay tr
+				$(this).parentsUntil('tbody').find('.price').html(cost*quantity);
+
+				total();
+			})
+        </script>
+	</body>
+</html>
